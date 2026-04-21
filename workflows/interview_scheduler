@@ -1,0 +1,541 @@
+{
+  "name": "Interview Scheduler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "150c92b7-4e69-4e14-8b9b-f6bb654323f7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "'1abjp8bAY1RoQvsWca5J-qlQpchQgA4M_' in parents and mimeType = 'application/pdf'",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c77b2b2c-ec65-45e5-a479-6f917794e80f",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CrswOldf2MIl1n0Z",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "352d302e-b7d7-4a1a-9e90-30e46b2e68e8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        16
+      ],
+      "id": "888ac27d-a892-4b8a-a255-0cfe42611163",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CrswOldf2MIl1n0Z",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        16
+      ],
+      "id": "b6f01b7c-81d7-41e2-a19d-8eae7d11b467",
+      "name": "Wait",
+      "webhookId": "2661f004-aa0e-4fe5-aeb6-8709ee548a69"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        16
+      ],
+      "id": "65a896bd-4960-421b-835e-83a444c5032d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Please analyse the following Curriculum Vitae content and return relevant details about the applicant and your recommendation about the applicants suitability to fill the position as AI/ML Engineer at a fintech startup:  {{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# Role\nYou are a Human Resources employee working for a fintech startup. Your role is to analyse Curriculum Vitae's of applicants for an AI/ML Engineer position where the user must possess strong skills in machine learning, data science, and related technologies, along with relevant experience in applying AI/ML in real-world or fintech-related scenarios.\n\n# Instructions\nFollow these steps in analysing a Curriculum Vitae and outputting relevant data in your response\n1. Read through the provided information \n2. Get the applicants full name and email address from the Curriculum Vitae\n3. Get the total number of years of experience the applicant has working with AI/ML technologies (e.g. Python, TensorFlow, PyTorch, Scikit-learn, NLP, Computer Vision)\n4. Get notable features about the applicants qualifications\n5. Get notable features about the applicants work experience (especially AI/ML projects or fintech-related work such as fraud detection, risk modeling, or financial analytics)\n6. Conclude as to whether you would recommend the applicant for the position of AI/ML Engineer\n\n# Rules\n1. AI/ML experience is the most important skill for the applicant to have. If the applicant does not have AI/ML experience don't recommend the applicant for the position.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1248,
+        16
+      ],
+      "id": "0e94384a-41d9-4e78-b8de-619c15cbe0a5",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        240
+      ],
+      "id": "0e7a04fe-4232-42d7-896e-b80daf1650e7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "i0n2dBOXT8wmOs4P",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"fullName\": \"Bob Jones\",\n\t\"email\": \"bobjones@gmail.com\",\n\t\"aiMlYearsExperience\": 5,\n\t\"notableQualifications\": \"The applicant has a degree in Computer Science with specialization in Artificial Intelligence\",\n\t\"notableWorkExperience\": \"The applicant has built machine learning models using TensorFlow and PyTorch and has experience working on fraud detection systems in fintech\",\n\t\"Recommended\": true\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1424,
+        224
+      ],
+      "id": "941a7abb-2faa-4ec3-ad64-b3d079102291",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "sayyedmohammadali12@gmail.com",
+        "subject": "Candidate Approval Required – AI/ML Engineer Role",
+        "message": "=Please review the candidate below and select an action (Approve / Disapprove).\n\n━━━━━━━━━━━━━━━━━━━━━━━\n👤 Candidate Profile\n━━━━━━━━━━━━━━━━━━━━━━━\nName: {{ $json.output.fullName }}\nEmail: {{ $json.output.email }}\n\n🧠 AI/ML Experience:\n{{ $json.output.aiMlYearsExperience }} years\n\n━━━━━━━━━━━━━━━━━━━━━━━\n🎓 Key Qualifications\n━━━━━━━━━━━━━━━━━━━━━━━\n{{ $json.output.notableQualifications }}\n\n━━━━━━━━━━━━━━━━━━━━━━━\n💼 Relevant Work Experience\n━━━━━━━━━━━━━━━━━━━━━━━\n{{ $json.output.notableWorkExperience }}\n\n━━━━━━━━━━━━━━━━━━━━━━━\n🤖 AI Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━\n{{ ($json.output.Recommended ? \"✅ Recommended for interview\" : \"❌ Not recommended for interview\") }}\n━━━━━━━━━━━━━━━━━━━━━━━\nAction Required:\nPlease approve or disapprove this candidate to proceed with interview scheduling.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1584,
+        -240
+      ],
+      "id": "48eab90d-6902-4b24-9183-6e3612668d0d",
+      "name": "Send a message",
+      "webhookId": "f0894573-7fd1-4293-8bff-8ef16c6febd9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uVrHbuxopNMuKnLC",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0eee27f8-9267-4c7a-9849-f33bfb42d4a8",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        -240
+      ],
+      "id": "0c7ec9b2-a0cf-43f9-b5e8-420b6dd105ec",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "amount": 25
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2032,
+        112
+      ],
+      "id": "27de223b-a5ef-4160-a7c3-da212f30f569",
+      "name": "Wait1",
+      "webhookId": "66983990-9ddb-4250-bfbd-c11ba7bce52c"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an assistant that schedules interviews in Google Calendar for an AI/ML Engineer position at a fintech startup.\n\nInstructions\n\nFetch Events\nCall the GetCalendarEvents tool to retrieve all existing events between Monday 00:00 and Friday 23:59 of the next calendar week after {{ $now }}.\nIf today is within this week, you must skip it. Only consider next week.\n\nFind Availability\nAnalyze the retrieved events. Identify the earliest available 1-hour free slot within working hours (08:00–18:00 local time).\nDo not select a time that overlaps with an existing event.\nDo not schedule outside 08:00–18:00.\nOnly use dates from next week's Monday–Friday window.\n\nSchedule Event\nOnce a free slot is found, call the CreateCalendarEvent tool with:\nsummary: \"AI/ML Interview with {{ $('AI Agent').item.json.output.fullName }}\"\nstart.dateTime: the beginning of the identified 1-hour slot (ISO 8601 format).\nend.dateTime: the start time plus exactly 60 minutes.\nattendees:\n{\"email\": \"{{ $('AI Agent').item.json.output.email }}\"}\n{\"email\": \"hr@fintechstartup.com\"}\n\nReturn Confirmation\nReturn only the scheduled event details as valid JSON in the following format:\n{\n  \"summary\": \"AI/ML Interview with {{ $('AI Agent').item.json.output.fullName }}\",\n  \"start\": { \"dateTime\": \"YYYY-MM-DDTHH:MM:SS\" },\n  \"end\": { \"dateTime\": \"YYYY-MM-DDTHH:MM:SS\" },\n  \"attendees\": [\n    { \"email\": \"{{ $('AI Agent').item.json.output.email }}\" },\n    { \"email\": \"hr@fintechstartup.com\" }\n  ]\n}\n\nRules\nToday's date/time is {{ $now }}.\nOnly consider Monday–Friday of the next calendar week.\nThe event must last exactly 60 minutes.\nRespect all existing events from GetCalendarEvents.\nOutput must be only valid JSON (no explanations, no markdown).\nIf GetCalendarEvents returns an empty response, no events, or an error, assume the calendar is completely free and schedule the interview at 09:00 on Monday of the next calendar week.\nIf GetCalendarEvents fails or returns no usable data on the first call, retry the tool call once before assuming the calendar is free.\nIf GetCalendarEvents fails, do NOT stop — always proceed to schedule the event using the earliest available default slot.\nNever return an error message. Always create the calendar event regardless of what GetCalendarEvents returns.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2240,
+        208
+      ],
+      "id": "452f05e9-5488-4ead-a1f9-708b6bbd8483",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2208,
+        480
+      ],
+      "id": "5aeadc66-caaa-49f9-a67b-ff1448537cf7",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "i0n2dBOXT8wmOs4P",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "sayyedmohammadali12@gmail.com",
+          "mode": "list",
+          "cachedResultName": "sayyedmohammadali12@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}",
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees1_Attendees', ``, 'string') }}"
+          ],
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        464
+      ],
+      "id": "de85c692-41bd-4b36-abd6-716ecffcd6c2",
+      "name": "CreateCalendarEvent",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "HhBF82GEumveM4PB",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "sayyedmohammadali12@gmail.com",
+          "mode": "list",
+          "cachedResultName": "sayyedmohammadali12@gmail.com"
+        },
+        "returnAll": true,
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2576,
+        480
+      ],
+      "id": "b1655ee7-9d4c-4908-82f2-3053b77a918d",
+      "name": "GetCalendarEvents",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "HhBF82GEumveM4PB",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CreateCalendarEvent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetCalendarEvents": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "68da09c4-c941-4a35-8b67-c669d67cfd7f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20792e889c4e9bb018ab8b800c35b3a5ba3ded71637bfe8e434f8df8f35e8e89"
+  },
+  "id": "SkGXn6jlHJYmSa4r",
+  "tags": []
+}
